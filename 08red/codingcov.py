@@ -1,1 +1,36 @@
-ⴣ⴪挠景湩㩧甠晴㠭ⴠ⴪椊灭牯⁴獯椊灭牯⁴祳ੳ搊晥朠瑥楆敬楌瑳昨汩䑥物㨩 †映汩䱥獩⁴‽嵛 †映牯爠潯ⱴ搠物ⱳ映汩獥椠⁮獯眮污⡫⸢∯㨩 †††映汩䱥獩⁴㴫嬠獯瀮瑡⹨潪湩爨潯ⱴ渠浡⥥映牯渠浡⁥湩映汩獥੝†††† †爠瑥牵⁮楦敬楌瑳ਊ敤⁦敲敳䍴摯湩呧灹⡥楦敬楌瑳‬牦浯潃楤杮∽瑵ⵦ㘱敬Ⱒ琠䍯摯湩㵧產晴㠭⤢਺††潣湵⁴‽ਰ††潦⁲⁦湩映汩䱥獩㩴 †††映㴠映爮灥慬散∨屜Ⱒ∠∯਩††††潣楤杮㴠漠⹳潰数⡮昢汩⁥戭⁩≜猥≜簠朠睡⁫䘭嬧㴠❝✠灻楲瑮␠紳∧┠映⸩敲摡⤨献牴灩∨牜湜⤢ †††椠⁦潣楤杮㴠‽牦浯潃楤杮氮睯牥⤨਺††††††晩漠⹳祳瑳浥∨捩湯⁶昭┠⁳琭┠⁳≜猥≜㸠尠┢⹳浴屰∢┠⠠牦浯潃楤杮‬潴潃楤杮‬ⱦ映⤩㴠‽‰湡⁤獯献獹整⡭洢⁶≜猥琮灭≜尠┢屳∢┠⠠ⱦ映⤩㴠‽㨰 †††††††瀠楲瑮∠䭏瑜猥•‥੦††††††††潣湵⁴㴫ㄠ †瀠楲瑮∠ⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭⴭਢ††牰湩⁴┢⁤楦敬挠浯汰瑥摥•‥潣湵ੴ††椊⁦彟慮敭彟㴠‽弢浟楡彮≟਺††敲敳䍴摯湩呧灹⡥敧䙴汩䱥獩⡴⸢∯Ⱙ∠瑵ⵦ∸‬朢止⤢
+# -*- coding: utf-8 -*-
+import subprocess
+import sys
+import os
+
+def run_coverage():
+    """运行代码覆盖率统计"""
+    # 检查是否安装coverage
+    try:
+        subprocess.run(["coverage", "--version"], check=True, capture_output=True)
+    except subprocess.CalledProcessError:
+        print("❌ 未安装coverage模块，请先执行：pip install coverage")
+        sys.exit(1)
+    except FileNotFoundError:
+        print("❌ 未找到coverage命令，请先执行：pip install coverage")
+        sys.exit(1)
+
+    # 清理旧的覆盖率数据
+    subprocess.run(["coverage", "erase"], capture_output=True)
+
+    # 运行测试（以bei.py为例，可根据需要修改）
+    test_cmd = ["coverage", "run", "--source=.", "bei.py", "test_words.txt"]
+    print(f"🔍 运行测试命令：{' '.join(test_cmd)}")
+    subprocess.run(test_cmd, capture_output=True)
+
+    # 生成覆盖率报告
+    print("\n📊 代码覆盖率报告：")
+    subprocess.run(["coverage", "report", "-m"], check=True)
+
+    # 生成HTML报告（可选）
+    html_dir = "htmlcov"
+    subprocess.run(["coverage", "html", "-d", html_dir], capture_output=True)
+    print(f"\n✅ HTML报告已生成：{os.path.abspath(html_dir)}/index.html")
+
+if __name__ == "__main__":
+    run_coverage()

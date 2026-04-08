@@ -1,301 +1,170 @@
+# -*- coding: utf-8 -*-
 import tkinter as tk
-# from backend import *
+from tkinter import font
 import random
 import sys
-import csv
+import os
 
-list_CN = []
-list_EN = []
-
-
-def parseTXT(txtName):
-
-    fp = open(txtName, 'r')
-    lines = fp.readlines()
-
-    global list_CN
-    global list_EN
-
-    for line in lines:
-        r = line.split()
-
-        list_EN.append(r[0])
-        list_CN.append((str(r[1:])[2:-2]))
-
-    return
-
-
-class Application:
-    def __init__(self, master):
-        self.wordState = False  # False for unknown and True for known.
-        self.level = 0          # 0 for not choose, 1 for first choice, 2 for more choice
-        self.master = master    # storing the window var
-        self.index = 0
-        self.isShown_CN = False
-        self.currentFile = ''
-        self.currentFileFolder = ''
-        self.badDict = {}
-        self.word_eg = tk.StringVar()
-        self.word_ch = tk.StringVar()
-        self.ViewControl()
-        self.keyboardSupoort()  # enable keyboard binding
-
-    def NextNewWord(self):
-        # todo: delete prev entry
-        self.updateBothButtons('我忘了', '我记得')
-
-        if self.wordState == False:
-            # save this to badict
-            print('saved to baddict')
-            print(list_EN[self.index])
-            if list_EN[self.index] not in self.badDict:
-                self.badDict[list_EN[self.index]] = 1
-            else:
-                self.badDict[list_EN[self.index]] = self.badDict[list_EN[self.index]] + 1
-            print(self.badDict)
-
-        else:
-            list_CN.pop(self.index)
-            list_EN.pop(self.index)
-
-
-        self.updateStatusBar('yellow')
-
-        self.index = random.randint(0, len(list_EN)-1)
-        self.level = 0
-        self.wordState = False
-        self.updateCHN('')
-        self.updateENG(list_EN[self.index])
-        # self.updateStatusBar()
-
-    def control(self, isRemembered):
-        if len(list_EN) == 0:
-            # write baddict to file
-            print(self.badDict)
-            with open('result/10.csv', 'w') as f:
-                for key in self.badDict.keys():
-                    f.write('%s     %s\n' % (key, self.badDict[key]))
-
-        # print('level is %d' % self.level)
-        if self.level == 0:
-            self.level = 1
-            if isRemembered == True:
-                self.wordState = True
-            else:
-                self.wordState = False
-
-            self.updateCHN(list_CN[self.index])
-            return
-
-        if self.level == 1:
-
-            self.level = 2
-            if self.wordState == True and isRemembered == True:
-
-                self.NextNewWord()
-            if self.wordState == False and isRemembered == False:
-                self.NextNewWord()
-
-            else:
-                self.wordState == False
-                if isRemembered == False:
-                    self.updateBothButtons('忘记了', '下一个')
-                    self.updateStatusBar('red')
-                    return
-
-                self.NextNewWord()
-            return
-
-        if self.level == 2:
-            # regret
-            self.wordState == False
-            if isRemembered == False:
-                self.updateBothButtons('忘记了', '下一个')
-                self.updateStatusBar('red')
-                return
-
-            self.NextNewWord()
-            return
-
-    def RemHelper(self):
-        self.control(True)
-
-    def FgtHelper(self):
-        self.control(False)
-
-    def updateENG(self, input):
-            # remember to call master.update after it
-        print('updating eng: %s' % input)
-        self.ShowingWord.config(text=input)
-        # self.button_remember.config(text='我记得')
-
-    def updateCHN(self, input):
-                # remember to call master.update after it
-        print('updating chn: %s' % input)
-        self.ShowingResult.config(text=input)
-        # self.button_remember.config(text='下一个')
-
-    def updateBothButtons(self, t1, t2):
-        self.button_forget.config(text=t1)
-        self.button_remember.config(text=t2)
-
-    def keyStroke(self, event):
-        # print(">>>>>>>>>>>>>>>>s")
-        # print(event.char)
-        # print(event.keycode)
-        # print(event)
-        # print('>>>>>>>>>>>>>>>>>>')
-        if event.char == 'a'  or event.keycode == 100 or event.keycode == 113 or event.char == '\uf702':
-            self.FgtHelper()
-        if event.char == 's'  or event.keycode == 102 or event.keycode == 114 or event.char == '\uf703':
-            self.RemHelper()
-
-    def updateStatusBar(self, fgColor='MISS'):
-        # self.label_title_right.config(text=self.currentFile)
-        remain = '(剩余:' + str(len(list_EN)) + ')'
-        if fgColor == 'MISS':
-            self.label_title.config(text=remain)
-        else:
-            self.label_title.config(text=remain, fg=fgColor)
-
-            # self.label_title_right.config()
-
-    def ViewControl(self):
-        self.frame_StatusBar = tk.Frame(self.master, bg='green')
-        self. frame_WordWindow = tk.Frame(self.master, bg='grey')
-        self.frame_OperationWindow = tk.Frame(self.master, bg='green')
-
-        self.inner_frame_StatusBar = tk.Frame(
-            self.frame_StatusBar, bg='green')
-        self.inner_frame_WordWindow = tk.Frame(self.frame_WordWindow)
-        self.inner_frame_OperationWindow = tk.Frame(self.frame_OperationWindow)
-
-        # pack the frame up
-        self.frame_StatusBar.pack(side='top', fill='x')
-        self.frame_WordWindow.pack(side='top', fill='x')
-        self.frame_OperationWindow.pack(fill='both', expand='yes')
-        self.inner_frame_StatusBar.pack(
-            fill='both', expand='yes', padx=5, pady=3)
-        self.inner_frame_WordWindow.pack(
-            fill='both', expand='yes', padx=3, pady=3)
-        self.inner_frame_OperationWindow.pack(
-            fill='both', expand='yes', padx=3, pady=3)
-
-        # create widgets
-        self.label_title_left = tk.Label(
-            self.inner_frame_StatusBar, text='')
-        self.label_title = tk.Label(
-            self.inner_frame_StatusBar, text='', bg='green')
-        self.label_title_right = tk.Label(
-            self.inner_frame_StatusBar, text='')
-
-        self.ShowingWord = tk.Label(
-            self.inner_frame_WordWindow, text='Wait for Load', font=('Arial', 20))
-        self.line_between = tk.Canvas(
-            self.inner_frame_WordWindow, height=2, bg='grey')
-        self.ShowingResult = tk.Label(
-            self.inner_frame_WordWindow, text='Wait for Load', font=('Arial', 13))
-
-        self.button_forget = tk.Button(
-            self.inner_frame_OperationWindow, text='我忘了', width=13, height=5, command=self.FgtHelper)
-        self.button_remember = tk.Button(
-            self.inner_frame_OperationWindow, text='我记得', width=13, height=5, command=self.RemHelper)
-
-        self.imageLoad = tk.Canvas(bg='red')
-
-        self.button1 = tk.Button(
-            self.master,  text='Setttings', width=25, command=self.StartSetttings)
-
-        # pack them up
-        # self.label_title_left.pack(side='left')
-        self.label_title.pack(side='top', fill='both')
-        # self.label_title_right.pack(side='left')
-        self.ShowingWord.pack(side='top', fill='x', expand='yes')
-        self.line_between.pack(side='top', fill='x', expand='yes')
-        self.ShowingResult.pack(side='top', fill='x', expand='yes')
-
-        self.button_forget.pack(side='left', anchor='ne', fill='y')
-        self.button_remember.pack(side='right', anchor='nw', fill='y')
-        # self.imageLoad.pack(fill='both')
-        self.button1.pack()
-
-    def StartSetttings(self):
-
-        self.newWindow = tk.Toplevel(self.master)
-        self.app = SubApplication(self.newWindow)
-
-    def keyboardSupoort(self):
-        self.master.bind("a", self.keyStroke)
-        self.master.bind("s", self.keyStroke)
-        self.master.bind("<Right>", self.keyStroke)
-        self.master.bind("<Left>", self.keyStroke)
-
-
-class SubApplication:
-    def __init__(self, master):
+class GREApp:
+    def __init__(self, master, word_file):
         self.master = master
-        self.ViewControl()
+        self.master.title("GREat@背单词")
+        self.master.geometry("800x600")
+        self.master.resizable(False, False)
 
+        # 加载单词
+        self.words = self.load_words(word_file)
+        self.total_words = len(self.words)
+        self.remaining = self.total_words
+        self.current_word = None
+        self.current_meaning = None
 
-    def ViewControl(self):
-        self.SettingFrame = tk.Frame(self.master)
+        # 字体设置
+        self.title_font = font.Font(size=24, weight="bold")
+        self.word_font = font.Font(size=36, weight="bold")
+        self.meaning_font = font.Font(size=20)
+        self.btn_font = font.Font(size=20)
+        self.status_font = font.Font(size=18, weight="bold")
 
-        self.quitButton = tk.Button(
-            self.SettingFrame, text='Quit', width=25, command=self.close_windows)
-        self.setting_entry_indicator = tk.Label(
-            self.SettingFrame, text='输入读取文件地址(请放在当前目录下)')
-        self.file_location = tk.Entry(self.SettingFrame)
+        # 状态栏（剩余单词数）
+        self.status_bar = tk.Frame(master, bg="green", height=80)
+        self.status_bar.pack(fill=tk.X, anchor=tk.N)
+        self.status_label = tk.Label(
+            self.status_bar,
+            text=f"(剩余:{self.remaining})",
+            bg="green",
+            fg="yellow",
+            font=self.status_font
+        )
+        self.status_label.pack(pady=20)
 
-        self.entry1 = tk.Entry(self.SettingFrame)
+        # 单词显示区
+        self.word_frame = tk.Frame(master, bg="white", height=150)
+        self.word_frame.pack(fill=tk.X)
+        self.word_label = tk.Label(
+            self.word_frame,
+            text="",
+            bg="white",
+            font=self.word_font
+        )
+        self.word_label.pack(pady=20)
+        self.separator = tk.Frame(self.word_frame, bg="gray", height=2)
+        self.separator.pack(fill=tk.X, padx=20)
+        self.meaning_label = tk.Label(
+            self.word_frame,
+            text="",
+            bg="white",
+            font=self.meaning_font
+        )
+        self.meaning_label.pack(pady=10)
 
-        self.entry1Button = tk.Button(self.SettingFrame)
-        self.entry1Label = tk.Label(self.SettingFrame, text='entry1')
-        self.entry2 = tk.Entry(self.SettingFrame)
-        self.entry2Button = tk.Button(self.SettingFrame)
-        self.entry2Label = tk.Label(self.SettingFrame, text='entry2')
+        # 按钮区
+        self.btn_frame = tk.Frame(master, bg="green")
+        self.btn_frame.pack(fill=tk.BOTH, expand=True)
+        # 配置网格布局，让两个按钮平分空间
+        self.btn_frame.grid_columnconfigure(0, weight=1)
+        self.btn_frame.grid_columnconfigure(1, weight=1)
+        self.btn_frame.grid_rowconfigure(0, weight=1)
 
-        self.entry3 = tk.Entry(self.SettingFrame)
-        self.entry3Button = tk.Button(self.SettingFrame)
-        self.entry3Label = tk.Label(self.SettingFrame, text='entry3')
+        # 我忘了按钮
+        self.forget_btn = tk.Button(
+            self.btn_frame,
+            text="我忘了",
+            font=self.btn_font,
+            bg="#f0f0f0",
+            command=self.on_forget
+        )
+        self.forget_btn.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
-        self.SettingFrame.pack()
-        # self.entryFrame1.pack()
-        # self.entryFrame2.pack()
-        # self.entryFrame3.pack()
+        # 我记得按钮
+        self.remember_btn = tk.Button(
+            self.btn_frame,
+            text="我记得",
+            font=self.btn_font,
+            bg="#f0f0f0",
+            command=self.on_remember
+        )
+        self.remember_btn.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
-        self.entry1Label.pack()
-        self.entry1.pack()
+        # 设置按钮（修复原拼写错误 Setttings → Settings）
+        self.settings_btn = tk.Button(
+            master,
+            text="Settings",
+            font=self.btn_font,
+            command=self.on_settings
+        )
+        self.settings_btn.pack(fill=tk.X, padx=10, pady=10)
 
-        self.entry2Label.pack()
-        self.entry2.pack()
+        # 绑定键盘事件
+        self.master.bind("<a>", lambda e: self.on_forget())
+        self.master.bind("<s>", lambda e: self.on_remember())
+        self.master.bind("<Left>", lambda e: self.on_forget())
+        self.master.bind("<Right>", lambda e: self.on_remember())
 
-        self.entry3Label.pack()
-        self.entry3.pack()
+        # 初始化第一个单词
+        self.next_word()
 
-        self.setting_entry_indicator.pack()
-        self.file_location.pack()
+    def load_words(self, file_path):
+        """加载单词文件，格式：单词\t释义（支持utf-8编码）"""
+        words = []
+        if not os.path.exists(file_path):
+            print(f"错误：文件 {file_path} 不存在！")
+            sys.exit(1)
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    # 按制表符分割，兼容空格分割的情况
+                    if "\t" in line:
+                        word, meaning = line.split("\t", 1)
+                    else:
+                        parts = line.split(maxsplit=1)
+                        if len(parts) < 2:
+                            continue
+                        word, meaning = parts
+                    words.append( (word.strip(), meaning.strip()) )
+            random.shuffle(words)
+            return words
+        except Exception as e:
+            print(f"加载单词文件失败：{str(e)}")
+            sys.exit(1)
 
-        self.quitButton.pack()
+    def next_word(self):
+        """加载下一个单词"""
+        if not self.words:
+            self.word_label.config(text="背完啦！🎉")
+            self.meaning_label.config(text="恭喜完成本次背诵！")
+            self.status_label.config(text="(剩余:0)")
+            self.forget_btn.config(state=tk.DISABLED)
+            self.remember_btn.config(state=tk.DISABLED)
+            return
+        self.current_word, self.current_meaning = self.words.pop()
+        self.word_label.config(text=self.current_word)
+        self.meaning_label.config(text=self.current_meaning)
+        self.remaining = len(self.words)
+        self.status_label.config(text=f"(剩余:{self.remaining})")
 
-    def close_windows(self):
-        self.master.destroy()
+    def on_forget(self):
+        """我忘了：单词放回列表末尾，下次再背"""
+        self.words.insert(0, (self.current_word, self.current_meaning))
+        self.next_word()
 
+    def on_remember(self):
+        """我记得：单词移除，不再显示"""
+        self.next_word()
 
-def main(txtName):
-    parseTXT(txtName)
+    def on_settings(self):
+        """设置按钮：简单弹窗提示"""
+        tk.messagebox.showinfo("设置", "当前版本仅支持基础背诵功能，更多功能敬请期待！")
 
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("用法: python3 bei.py [单词文件路径]")
+        print("示例: python3 bei.py 08red/11.txt")
+        sys.exit(1)
+    word_file = sys.argv[1]
     root = tk.Tk()
-    root.title('GREat@背单词')
-    root.geometry('280x300')
-    app = Application(root)
-    app.NextNewWord()
+    app = GREApp(root, word_file)
     root.mainloop()
-
-
-if __name__ == '__main__':
-    print(len(sys.argv))
-    if len(sys.argv) == 2:
-        txtName = sys.argv[1]
-    else:
-        txtName = '08red/10.txt'
-    main(txtName)
