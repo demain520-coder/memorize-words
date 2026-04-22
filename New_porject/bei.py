@@ -8,10 +8,12 @@ from ui.window import WordApp
 
 
 def scan_all_vocab_files():
-    VOCAB_FOLDER = r"E:\git\memorize-words\vocab"
+    # 使用相对路径，基于当前文件位置
+    VOCAB_FOLDER = os.path.join(os.path.dirname(__file__), "vocab")
     if not os.path.exists(VOCAB_FOLDER):
-        messagebox.showerror("错误", f"目录不存在：\n{VOCAB_FOLDER}")
-        return []
+        # 如果目录不存在，创建它
+        os.makedirs(VOCAB_FOLDER, exist_ok=True)
+
     files = []
     for name in os.listdir(VOCAB_FOLDER):
         if name.lower().endswith(".txt"):

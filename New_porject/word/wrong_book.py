@@ -3,7 +3,8 @@
 import json
 import os
 
-WRONG_FILE = "wrong_words.json"
+# 使用基于当前文件位置的绝对路径
+WRONG_FILE = os.path.join(os.path.dirname(__file__), "wrong_words.json")
 
 def load_wrong_words():
     """加载错题本"""
