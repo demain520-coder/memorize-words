@@ -25,11 +25,11 @@ def scan_all_vocab_files():
 def show_select_window(files):
     if not files:
         messagebox.showwarning("提示", "未找到任何单词文件！")
-        return None
+        return None, False
 
     win = tk.Tk()
     win.title("选择词库")
-    win.geometry("550x350")
+    win.geometry("550x400")
     win.resizable(False, False)
 
     tk.Label(win, text="请选择要背诵的单词文件", font=("微软雅黑", 14)).pack(pady=10)
@@ -39,6 +39,12 @@ def show_select_window(files):
         listbox.insert(tk.END, display_name)
 
     listbox.pack(fill=tk.BOTH, expand=True, padx=20)
+    
+    # 添加乱序选项
+    shuffle_var = tk.BooleanVar(value=False)
+    shuffle_checkbox = tk.Checkbutton(win, text="乱序背单词", font=("微软雅黑", 12), variable=shuffle_var)
+    shuffle_checkbox.pack(pady=10)
+    
     selected = [None]
 
     def confirm():
@@ -51,17 +57,17 @@ def show_select_window(files):
 
     ttk.Button(win, text="确认选择", command=confirm).pack(pady=12)
     win.mainloop()
-    return selected[0]
+    return selected[0], shuffle_var.get()
 
 
 def start_app():
     vocab_list = scan_all_vocab_files()
-    selected_file = show_select_window(vocab_list)
+    selected_file, shuffle = show_select_window(vocab_list)
     if not selected_file:
         sys.exit()
 
     main_win = tk.Tk()
-    app = WordApp(main_win, selected_file, start_app)
+    app = WordApp(main_win, selected_file, start_app, shuffle)
     main_win.mainloop()
 
 

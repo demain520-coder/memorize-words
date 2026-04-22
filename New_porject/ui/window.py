@@ -4,15 +4,18 @@ import tkinter as tk
 from tkinter import font, messagebox, scrolledtext
 from word.wrong_book import add_wrong_word, load_wrong_words, clear_wrong_words
 import os
+import random
+import random
 
 class WordApp:
-    def __init__(self, root, word_file, on_back_callback):
+    def __init__(self, root, word_file, on_back_callback, shuffle=False):
         self.root = root
         self.on_back_callback = on_back_callback  # 回调：返回选择界面
         self.root.title("GREat@背单词")
         self.root.geometry("760x860")
         self.root.resizable(False, False)
         self.word_file = word_file
+        self.shuffle = shuffle
 
         self.words = self.load_words()
         self.current_word = None
@@ -36,6 +39,10 @@ class WordApp:
                             continue
                         w, m = parts
                     words.append((w.strip(), m.strip()))
+            
+            # 如果需要乱序，打乱单词列表
+            if self.shuffle:
+                random.shuffle(words)
         except Exception as e:
             messagebox.showerror("加载失败", f"读取单词文件失败：{str(e)}")
         return words
