@@ -3,12 +3,14 @@
 import tkinter as tk
 from tkinter import font, messagebox, scrolledtext
 from word.wrong_book import add_wrong_word, load_wrong_words, clear_wrong_words
+# 【新增】导入进度保存函数
+from word.progress import save_progress
 import os
-import random
 import random
 
 class WordApp:
-    def __init__(self, root, word_file, on_back_callback, shuffle=False):
+    # 【修改】构造方法：新增 initial_words 接收外部传入单词列表
+    def __init__(self, root, word_file, initial_words, on_back_callback, shuffle=False):
         self.root = root
         self.on_back_callback = on_back_callback  # 回调：返回选择界面
         self.root.title("GREat@背单词")
@@ -17,35 +19,16 @@ class WordApp:
         self.word_file = word_file
         self.shuffle = shuffle
 
-        self.words = self.load_words()
+        # 【修改】不再本地加载，直接用传入的初始单词列表
+        self.words = initial_words
         self.current_word = None
 
         self.create_ui()
         self.next_word()
 
+    # 【新增】原本地加载单词方法废弃，空实现
     def load_words(self):
-        words = []
-        try:
-            with open(self.word_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    if "\t" in line:
-                        w, m = line.split("\t", 1)
-                    else:
-                        parts = line.split(" ", 1)
-                        if len(parts) < 2:
-                            continue
-                        w, m = parts
-                    words.append((w.strip(), m.strip()))
-            
-            # 如果需要乱序，打乱单词列表
-            if self.shuffle:
-                random.shuffle(words)
-        except Exception as e:
-            messagebox.showerror("加载失败", f"读取单词文件失败：{str(e)}")
-        return words
+        pass
 
     def create_ui(self):
         # 顶部状态栏
@@ -131,9 +114,13 @@ class WordApp:
     def on_forget(self):
         add_wrong_word(self.current_word[0], self.current_word[1])
         self.words.insert(0, self.current_word)
+        # 【新增】操作单词后保存当前进度
+        save_progress(self.word_file, self.words)
         self.next_word()
 
     def on_remember(self):
+        # 【新增】操作单词后保存当前进度
+        save_progress(self.word_file, self.words)
         self.next_word()
 
     def open_wrong_book(self):
